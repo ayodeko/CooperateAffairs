@@ -6,7 +6,7 @@ namespace CooperateAffairs.Logic
 	{
 		HttpClient _httpClient;
 
-		public static string FirebaseHttpPut(string relativeUrl, object input)
+		public static string FirebaseHttpPatch(string relativeUrl, object input)
 		{
 			using (var httpClient = new HttpClient())
 			{

@@ -12,7 +12,7 @@ namespace CooperateAffairs.Controllers
 	public class UserController : ControllerBase
 	{
         [HttpPost("[action]")]
-        public HttpResponseMessage CreateBankUser(BankUser user)
+        public IActionResult CreateBankUser(BankUser user)
         {
             var responseString = Dekobase.CreateBankUser(user);
 
@@ -27,10 +27,7 @@ namespace CooperateAffairs.Controllers
                 response.ErrorMessage = responseString;
             }
             var stringContent = new StringContent(JsonConvert.SerializeObject(response));
-            return new HttpResponseMessage()
-            {
-                Content = stringContent
-            };
+            return Ok(JsonConvert.SerializeObject(response));
         }
 
         [HttpPost("[action]")]

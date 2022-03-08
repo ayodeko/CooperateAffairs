@@ -216,7 +216,7 @@ public class DekoSharp : IDekoSharp
             LastTimeUpdated = DateTime.Now.ToString()
         };
         //var pushResponse = _client.Update($"request/{DekoUtility.ReplaceSpace(inputRequest.RCNumber)}", kycRequest);
-        var pushResponse = DekoHttp.FirebaseHttpPut($"request/{DekoUtility.ReplaceSpace(inputRequest.RCNumber)}", kycRequest);
+        var pushResponse = DekoHttp.FirebaseHttpPatch($"request/{DekoUtility.ReplaceSpace(inputRequest.RCNumber)}", kycRequest);
         statusCode = HttpStatusCode.OK;
         return pushResponse;
     }
@@ -251,8 +251,13 @@ public class DekoSharp : IDekoSharp
         var updateResponse = _client.Update($"request/{requestId}", update);
     }
 
-    public static string AddRequestToLawyerId(string lawyerId, KycRequest kycRequest, out HttpStatusCode statusCode)
+    public static string AssignRequestToLawyerId(string lawyerId, KycRequest kycRequest, out HttpStatusCode statusCode)
     {
+        var statusAndLawyerId = new
+        {
+            statusAndLawyerId = $"{KycRequest.KycRequestStatus.Pending}|{lawyerId}"
+        };
+
         var pushResponse = _client.Set($"Lawyer/{lawyerId}/Request", kycRequest);
         statusCode = pushResponse.StatusCode;
         return pushResponse.Body;

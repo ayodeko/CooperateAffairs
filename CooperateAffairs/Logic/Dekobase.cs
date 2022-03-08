@@ -14,23 +14,23 @@ namespace DotNetFirebase.Logic
     {
         private string CreateUserInternal(UserRecordArgs userRecords)
         {
-            try
-            {
                 var claims = new Dictionary<string, object> {{"role", "admin"}};
                 UserRecord userRecord = FirebaseAuth.DefaultInstance.CreateUserAsync(userRecords).Result;
                 FirebaseAuth.DefaultInstance.SetCustomUserClaimsAsync(userRecord.Uid, claims);
                 return userRecord.Uid;
-            }
-            catch (Exception ex)
-            {
-                return $"Exception caught: {ex.ToString()}";
-            }
+            
+           
         }
 
         public static string CreateBankUser(BankUser bankUser)
         {
             try
             {
+                var retrievedBank = DekoSharp.RetrieveBankFromTable(bankUser.BankName, out var statusCode);
+                if (!string.IsNullOrEmpty(retrievedBank) && !retrievedBank.ToLower().Contains("null"))
+                {
+                    return $"Exception: BankName already exists";
+                }
                 DekoUtility.LogInfo("Inside CreateBankUser");
                 var userRecords = new UserRecordArgs
                 {

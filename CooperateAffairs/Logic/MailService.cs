@@ -62,6 +62,15 @@ namespace CooperateAffairs.Logic
 			}
 		}
 	}
+
+	public class SendGridMailService : IMailService
+	{
+		public void SendEmailAsync()
+		{
+			throw new NotImplementedException();
+		}
+	}
+
 	public class MailRequest
     {
         public string ToEmail { get; set; }

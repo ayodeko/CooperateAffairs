@@ -1,0 +1,29 @@
+﻿
+@{
+    ViewData["Title"] = "BankNavigation";
+}
+
+<h1>BankNavigation</h1>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="form-group">
+                <input type="button" value="Create New Kyc Request" onclick="location.href='@Url.Action("Create", "KycRequests")'" class="btn btn-primary" />
+        </div>
+        <div class="form-group">
+                 <input type="button" value="Logout" onclick="location.href='@Url.Action("Logout", "BankNavigation")'" class="btn btn-primary"/>
+        </div>
+        <div class="form-group">
+                <input type="button" value="Edit User Details" onclick="location.href='@Url.Action("EditUserDetails", "Users")'" class="btn btn-primary" />
+        </div>
+        <div class="form-group">
+                <input type="button" value="See Kyc Requests" onclick="location.href='@Url.Action("Index", "KycRequests")'" class="btn btn-primary" />
+        </div>
+        <div class="form-group">
+                <input type="button" value="Edit User Profile Details" onclick="location.href='@Url.Action("EditBankUserProfile", "Users")'" class="btn btn-primary" />
+        </div>
+        <div class="form-group">
+                <input type="button" value="ChangePassword" onclick="location.href='@Url.Action("ChangePassword", "Users")'" class="btn btn-primary" />
+        </div>
+    </div>
+</div>

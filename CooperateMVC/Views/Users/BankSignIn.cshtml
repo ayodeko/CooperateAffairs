@@ -1,0 +1,39 @@
+﻿@model CooperateMVC.ViewModels.UserLoginViewModel
+@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+    ViewData["Title"] = "BankSignIn";
+}
+
+<h1>Login</h1>
+
+<h4>BankUser</h4>
+
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="BankSignIn">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="Email" class="control-label"></label>
+                <input asp-for="Email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Password" class="control-label"></label>
+                <input asp-for="Password" class="form-control" />
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+            
+            
+            <div class="form-group">
+                <input type="submit" value="BankSignIn" class="btn btn-primary" />
+            </div>
+            <div class="form-group">
+                <input type="button" value="SignUp" asp-action="SignUp" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+

@@ -1,0 +1,39 @@
+﻿@model CooperateMVC.ViewModels.EditBankUserProfileViewModel
+@{
+    ViewData["Title"] = "Edit Bank User Profile";
+}
+
+<h1>Edit Bank User Profile</h1>
+<h3> Leave spaces as blank if you don't wish to update it</h3>
+
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="EditBankUserProfile">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="BankName" class="control-label"></label>
+                <input asp-for="BankName" class="form-control" />
+                <span asp-validation-for="BankName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Email" class="control-label"></label>
+                <input asp-for="Email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="BankOfficerName" class="control-label"></label>
+                <input asp-for="BankOfficerName" class="form-control" />
+                <span asp-validation-for="BankOfficerName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="BankOfficerPhoneNumber" class="control-label"></label>
+                <input asp-for="BankOfficerPhoneNumber" class="form-control" />
+                <span asp-validation-for="BankOfficerPhoneNumber" class="text-danger"></span>
+            </div>
+            @Html.HiddenFor(model => model.Uid);
+            <div class="form-group">
+                <input type="submit" value="Update Profile" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>

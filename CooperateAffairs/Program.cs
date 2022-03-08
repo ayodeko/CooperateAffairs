@@ -34,6 +34,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.FirebaseInitialize();
+
 app.ConfigureDekoExceptionHandler();
 
 app.UseHttpsRedirection();
