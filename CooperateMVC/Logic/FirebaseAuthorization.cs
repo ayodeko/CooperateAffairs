@@ -60,10 +60,11 @@ namespace CooperateMVC.Logic
 			}
 			else
 			{
-                var result = claimsList.Any(obj => Convert.ToString(obj) == "admin" || Convert.ToString(obj) == "bank");
+                var result = claimsList.Any(obj => Convert.ToString(obj) == "admin" || Convert.ToString(obj) == "bank" || Convert.ToString(obj) == "lawyer");
                 return result;
 			}
         }
+       
     }
 
 

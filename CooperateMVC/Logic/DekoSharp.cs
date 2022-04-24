@@ -196,17 +196,41 @@ public interface IDekoSharp
 
         public  string CreateLawyerTable(LawyerBioData data, out HttpStatusCode statusCode)
         {
-            var pushResponse = _client.Set($"test/lawyers/{DekoUtility.ReplaceSpace(data.FirmName)}", data);
+            var pushResponse = _client.Set($"test/lawyers/{DekoUtility.CheckNullOrEmpty(DekoUtility.ReplaceSpace(data.Id))}", DekoUtility.RemoveNulls(data));
             statusCode = pushResponse.StatusCode;
             return pushResponse.Body;
         }
 
-        public  string RetrieveLawyerFromTable(string companyName, out HttpStatusCode statusCode)
+        public  string RetrieveLawyerFromTable(string id, out HttpStatusCode statusCode)
         {
-            var getResponse = _client.Get($"test/lawyers/{DekoUtility.ReplaceSpace(companyName)}");
+            var getResponse = _client.Get($"test/lawyers/{DekoUtility.ReplaceSpace(id)}");
             statusCode = getResponse.StatusCode;
             return getResponse.Body;
         }
+
+        public LawyerBioData RetrieveLawyerFromTableByName(string name, out HttpStatusCode statusCode)
+        {
+			try { 
+            var lawyerString = DekoHttp.FirebaseOrderByEqualToString($"test/lawyers", "FirmName", name);
+            Console.WriteLine("Request String:" + lawyerString);
+
+            if (string.IsNullOrEmpty(lawyerString))
+            {
+                statusCode = HttpStatusCode.BadRequest;
+                return null;
+            }
+            var lawyerRequestHolder = JsonConvert.DeserializeObject<Dictionary<string, LawyerBioData>>(lawyerString);
+            var lawyerRequest = lawyerRequestHolder.Values.FirstOrDefault();
+
+            statusCode = HttpStatusCode.OK;
+            return lawyerRequest;
+        }
+            catch(Exception _)
+			{
+                statusCode = HttpStatusCode.BadRequest;
+				throw;
+			}
+}
 
         public  string RetrieveDataFromPath(string dbPath, out HttpStatusCode statusCode)
         {
@@ -318,20 +342,18 @@ public interface IDekoSharp
 
 		public  string UploadKycInfo(UploadKycRequest inputRequest, out HttpStatusCode statusCode)
         {
-            var existingData = RetrieveKycRequestByRcNumber(inputRequest.RCNumber, out var statusCode2);
-            if (existingData == null || existingData.ToString().Equals("null"))
+            var kycData = RetrieveKycRequestByRcNumber(inputRequest.RCNumber, out var statusCode2);
+            if (kycData == null || kycData.ToString().Equals("null"))
             {
                 statusCode = statusCode2;
-                return $"Request with RCNumber {DekoUtility.ReplaceSpace(inputRequest.RCNumber)} already exists: {existingData}";
+                return $"Exception: Request with RCNumber {DekoUtility.ReplaceSpace(inputRequest.RCNumber)} does not exist";
             }
-            var kycRequest = new
-            {
-                Status = KycRequest.KycRequestStatus.Processing,
-                KycInfo = inputRequest.KycInfo,
-                LastTimeUpdated = DateTime.Now.ToString()
-            };
+            kycData.KycInfo = inputRequest.KycInfo;
+            if(kycData.KycInfo != null) { kycData.KycInfo.RCNumber = inputRequest.RCNumber; }
+            kycData.Status = KycRequest.KycRequestStatus.Processing;
+            kycData.LastTimeUpdated = DateTime.Now.ToString();
             //var pushResponse = _client.Update($"request/{DekoUtility.ReplaceSpace(inputRequest.RCNumber)}", kycRequest);
-            var pushResponse = DekoHttp.FirebaseHttpPatch($"request/{DekoUtility.CheckNullOrEmpty(DekoUtility.ReplaceSpace(inputRequest.RCNumber))}", DekoUtility.RemoveNulls(kycRequest));
+            var pushResponse = DekoHttp.FirebaseHttpPatch($"request/{DekoUtility.CheckNullOrEmpty(DekoUtility.ReplaceSpace(inputRequest.RCNumber))}", DekoUtility.RemoveNulls(kycData));
             statusCode = HttpStatusCode.OK;
             return pushResponse;
         }

@@ -58,6 +58,16 @@
         <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.Status)
         </dd>
+
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.KycInfo.CompanyName)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.KycInfo.CompanyName)
+        </dd>
+        <div class="form-group">
+                <input type="button" value="See Kyc Information" onclick="location.href='@Url.Action("ViewKycInfo", "KycRequests", new {id = Model.RCNumber})'" class="btn btn-primary" />
+        </div>
     </dl>
 </div>
 <div>

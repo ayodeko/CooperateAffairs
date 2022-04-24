@@ -1,0 +1,84 @@
+﻿@model CooperateMVC.Models.KycInfoViewModel
+
+@{
+    ViewData["Title"] = "Create";
+    var officerName = (string)TempData["ShareHolderName"];
+    TempData["ShareHolderName"] = officerName;
+    bool isEdit = !string.IsNullOrEmpty(officerName);
+}
+@{
+    if (isEdit)
+    {
+        <h1>Edit</h1>
+    }
+    else
+    {
+        <h1>Create</h1>
+    }
+    }
+
+<h4>Share Holder</h4>
+<hr />
+<div class="row">
+    @{
+    if (isEdit)
+    {
+        Model.ShareHolderId = ((Guid)TempData["ShareHolderId"]).ToString();
+        Console.WriteLine("Share Holder ID: " + Model.ShareHolderId );
+    <div class="col-md-4">
+        <form asp-action="EditShareHolder">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="form-group">
+                <label asp-for="ShareHolderName" class="control-label"></label>
+                <input asp-for="ShareHolderName" class="form-control" value=@TempData["ShareHolderName"]/>
+                <span asp-validation-for="ShareHolderName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ShareHolderPercentage" class="control-label"></label>
+                <input asp-for="ShareHolderPercentage" class="form-control" value=@Convert.ToDecimal(TempData["ShareHolderPercentage"])/>
+                <span asp-validation-for="ShareHolderPercentage" class="text-danger"></span>
+            </div>
+            @Html.HiddenFor(model => model.KycRequestJsonHolder)
+            @Html.HiddenFor(model => model.RCNumber)
+            @Html.HiddenFor(model => model.ShareHolderId)
+            <div class="form-group">
+                <input type="submit" value="Edit ShareHolder" class="btn btn-primary" />
+            </div>
+        </form>
+            </div>
+        }
+        else
+        {
+            <div class="col-md-4">
+        <form asp-action="CreateShareHolder">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="form-group">
+                <label asp-for="ShareHolderName" class="control-label"></label>
+                <input asp-for="ShareHolderName" class="form-control" />
+                <span asp-validation-for="ShareHolderName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ShareHolderPercentage" class="control-label"></label>
+                <input asp-for="ShareHolderPercentage" class="form-control" />
+                <span asp-validation-for="ShareHolderPercentage" class="text-danger"></span>
+            </div>
+            @Html.HiddenFor(model => model.KycRequestJsonHolder)
+            @Html.HiddenFor(model => model.RCNumber)
+            <div class="form-group">
+                <input type="submit" value="Add ShareHolder" class="btn btn-primary" />
+            </div>
+        </form>
+            </div>
+        }
+        }
+        </div>
+
+<div>
+    <a asp-action="CreateKycInfo">Cancel</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

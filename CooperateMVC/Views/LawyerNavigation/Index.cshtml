@@ -1,0 +1,17 @@
+﻿
+@{
+    ViewData["Title"] = "LawyerNavigation";
+}
+
+<h1>BankNavigation</h1>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="form-group">
+                <input type="button" value="Create Lawyer" onclick="location.href='@Url.Action("LawyerSignUp", "Lawyer")'" class="btn btn-primary" />
+        </div>
+        <div class="form-group">
+                <input type="button" value="See Kyc Requests" onclick="location.href='@Url.Action("Index", "KycRequests")'" class="btn btn-primary" />
+        </div>
+    </div>
+</div>

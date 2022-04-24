@@ -1,0 +1,97 @@
+﻿@model CooperateMVC.Models.KycInfoViewModel
+
+@{
+    ViewData["Title"] = "Create";
+    var officerName = (string)TempData["CompanyOfficerName"];
+    TempData["CompanyOfficerName"] = officerName;
+    bool isEdit = !string.IsNullOrEmpty(officerName);
+}
+@{
+    if (isEdit)
+    {
+        <h1>Edit</h1>
+    }
+    else
+    {
+        <h1>Create</h1>
+    }
+    }
+
+<h4>Add Company Officer</h4>
+<hr />
+<div class="row">
+
+    @{
+    if (isEdit)
+    {
+        Model.CompanyOfficerId = ((Guid)TempData["CompanyOfficerId"]).ToString();
+        <div class="col-md-4">
+        <form asp-action="EditCompanyOfficer">
+            <div asp-validation-summary="All" class="text-danger"></div>
+
+            <div class="form-group">
+                <label asp-for="CompanyOfficerName" class="control-label"></label>
+                <input asp-for="CompanyOfficerName" class="form-control" value=@TempData["CompanyOfficerName"]/>
+                <span asp-validation-for="CompanyOfficerName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CompanyOfficerPosition" class="control-label"></label>
+                <input asp-for="CompanyOfficerPosition" class="form-control" value=@TempData["CompanyOfficerPosition"] />
+                <span asp-validation-for="CompanyOfficerPosition" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CompanyOfficerSerialNumber" class="control-label"></label>
+                <input asp-for="CompanyOfficerSerialNumber" class="form-control" value=@TempData["CompanyOfficerSerialNumber"] />
+                <span asp-validation-for="CompanyOfficerSerialNumber" class="text-danger"></span>
+            </div>
+            @Html.HiddenFor(model => model.KycRequestJsonHolder)
+            @Html.HiddenFor(model => model.RCNumber)
+            @Html.HiddenFor(model => model.CompanyOfficerId)
+            <div class="form-group">
+                <input type="submit" value="Edit Company Officer" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+    }
+    else
+    {
+        <div class="col-md-4">
+        <form asp-action="CreateCompanyOfficer">
+            <div asp-validation-summary="All" class="text-danger"></div>
+
+            <div class="form-group">
+                <label asp-for="CompanyOfficerName" class="control-label"></label>
+                <input asp-for="CompanyOfficerName" class="form-control" value=@TempData["CompanyOfficerName"] />
+                <span asp-validation-for="CompanyOfficerName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CompanyOfficerPosition" class="control-label"></label>
+                <input asp-for="CompanyOfficerPosition" class="form-control" value=@TempData["CompanyOfficerPosition"] />
+                <span asp-validation-for="CompanyOfficerPosition" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CompanyOfficerSerialNumber" class="control-label"></label>
+                <input asp-for="CompanyOfficerSerialNumber" class="form-control" value=@TempData["CompanyOfficerSerialNumber"] />
+                <span asp-validation-for="CompanyOfficerSerialNumber" class="text-danger"></span>
+            </div>
+            @Html.HiddenFor(model => model.KycRequestJsonHolder)
+            @Html.HiddenFor(model => model.RCNumber)
+            <div class="form-group">
+                <input type="submit" value="Add Company Officer" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+    }
+
+    }
+    
+    
+</div>
+
+<div>
+    <a asp-action="CreateKycInfo">Cancel</a>
+</div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}

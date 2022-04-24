@@ -117,7 +117,8 @@ namespace CooperateMVC.Controllers
             Console.WriteLine("ModelState Invalid");
             return View();
 		}
-        
+
+        [ClaimRequirement("", "")]
         [HttpGet]
         //[ValidateAntiForgeryToken]
         //[AllowAnonymous]
@@ -142,6 +143,7 @@ namespace CooperateMVC.Controllers
             return View(userViewModel);
         }
 
+        [ClaimRequirement("", "")]
         [HttpPost]
         //[AllowAnonymous]
         public IActionResult EditBankUserProfile(EditBankUserProfileViewModel model)
@@ -186,6 +188,7 @@ namespace CooperateMVC.Controllers
 			}
 		}
 
+        [ClaimRequirement("", "")]
         [HttpGet]
         //[ValidateAntiForgeryToken]
         //[AllowAnonymous]
@@ -206,6 +209,7 @@ namespace CooperateMVC.Controllers
             return View(userViewModel);
         }
 
+        [ClaimRequirement("", "")]
         [HttpPost]
         //[AllowAnonymous]
         public IActionResult ChangePassword(ChangePasswordViewModel model)
@@ -246,6 +250,7 @@ namespace CooperateMVC.Controllers
 		}
 
 
+        [ClaimRequirement("", "")]
         [HttpGet]
         //[ValidateAntiForgeryToken]
         //[AllowAnonymous]
@@ -268,6 +273,7 @@ namespace CooperateMVC.Controllers
             return View(userViewModel);
         }
 
+        [ClaimRequirement("", "")]
         [HttpPost]
         public IActionResult EditUserDetails(EditBankUserViewModel model)
 		{

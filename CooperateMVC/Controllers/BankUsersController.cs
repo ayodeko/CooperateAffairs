@@ -13,6 +13,7 @@ using CooperateMVC.ViewModels;
 
 namespace CooperateMVC.Controllers
 {
+    [ClaimRequirement("", "")]
     public class BankUsersController : Controller
     {
         private readonly CooperateMVCContext _context;
@@ -84,7 +85,7 @@ namespace CooperateMVC.Controllers
         }
 
         // GET: BankUsers/Edit/5
-        public async Task<IActionResult> Edit(string? uid)
+        public async Task<IActionResult> Edit(string uid)
         {
             if (uid == null)
             {

@@ -1,4 +1,5 @@
-﻿@model IEnumerable<CooperateMVC.Models.KycRequest>
+﻿@using CooperateMVC.Logic
+@model IEnumerable<CooperateMVC.Models.KycRequest>
 
 @{
     ViewData["Title"] = "Index";
@@ -67,7 +68,15 @@
                 @Html.DisplayFor(modelItem => item.Status)
             </td>
             <td>
-                <a asp-action="Edit" asp-route-id="@item.RCNumber">Edit</a> |
+                    @if(new Dekobase().isClaim("admin", Context.Request.Cookies["_firebaseUser"]))
+                    {
+                        Console.WriteLine("...........User is lawyer...........");
+                        <a asp-action="CreateKycInfo" asp-route-id="@item.RCNumber">Edit</a>
+                    }
+                    else
+                    {
+                        <a asp-action="Edit" asp-route-id="@item.RCNumber">Edit</a>
+                    }|
                 <a asp-action="Details" asp-route-id="@item.RCNumber">Details</a> |
                 <a asp-action="Delete" asp-route-id="@item.RCNumber">Delete</a>
             </td>

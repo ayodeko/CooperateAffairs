@@ -101,10 +101,10 @@ namespace CooperateMVC.Logic
         {
             try
             {
-                if(!_dekoSharp.RetrieveLawyerFromTable(user.FirmName, out var statusCode).ToString().Equals("null"))
+                if(_dekoSharp.RetrieveLawyerFromTableByName(user.FirmName, out var statusCode) != null)
                 {
                     statusCode = HttpStatusCode.BadRequest;
-                    return $"Organization with name {user.FirmName} already exists";
+                    return $"Exception: Organization with name {user.FirmName} already exists";
                 }
                 var userRecords = new UserRecordArgs
                 {
@@ -115,6 +115,7 @@ namespace CooperateMVC.Logic
                 };
                 var claims = new Dictionary<string, object> {{"role", "lawyer"}};
                 UserRecord userRecord = FirebaseAuth.DefaultInstance.CreateUserAsync(userRecords).Result;
+                user.Id = userRecord.Uid;
                 FirebaseAuth.DefaultInstance.SetCustomUserClaimsAsync(userRecord.Uid, claims);
                 var result = _dekoSharp.CreateLawyerTable(user, out _);
                 DekoUtility.LogInfo(result);
@@ -125,7 +126,7 @@ namespace CooperateMVC.Logic
                 DekoUtility.LogError(ex);
                 return ex.InnerException != null
                     ? $"Exception: {ex.InnerException.Message}"
-                    : $"Exception: {ex.ToString()}";
+                    : $"Exception: {ex.Message}";
             }
         }
 
@@ -176,6 +177,11 @@ namespace CooperateMVC.Logic
             
         }
 
+        public void GetUserRole(string uid)
+		{
+
+		}
+
         public string GetCustomToken(string uid) => FirebaseAuth.DefaultInstance.CreateCustomTokenAsync(uid).Result;
 
         public string VerifyIDToken(string id)
@@ -194,20 +200,47 @@ namespace CooperateMVC.Logic
             }
         }
 
-        public IEnumerable<object> GetUserClaims(string id, out bool isAuthorized)
+        public IEnumerable<object> GetUserClaims(string token, out bool isAuthorized)
         {
             try
             {
-                var verifiedToken = FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(id, true).Result;
+                var verifiedToken = FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(token, true).Result;
                 var customClaims = verifiedToken.Claims;
                 var result = customClaims.Aggregate("",
                     (current, claim) => current + $" Key: {claim.Key}, Value: {claim.Value}");
-                Console.WriteLine(result);
+                Console.WriteLine($"Claims result: {result}");
                 isAuthorized = true;
                 return customClaims.Values;
             }
             catch (Exception ex)
             {
+                isAuthorized = false;
+                return null;
+            }
+        }
+
+        public bool isClaim(string claim, string token)
+		{
+            return GetUserClaims(token, out _).ToList().Any(x => Convert.ToString(x) == claim);
+		}
+
+        public object GetUserClaimsWithKey(string token, string key, out bool isAuthorized)
+        {
+            try
+            {
+                var verifiedToken = FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(token, true).Result;
+                var customClaims = verifiedToken.Claims;
+                var result = customClaims.Aggregate("",
+                    (current, claim) => current + $" Key: {claim.Key}, Value: {claim.Value}");
+                Console.WriteLine($"Claims result: {result}");
+                var value = customClaims?[key];
+                isAuthorized = true;
+                Console.WriteLine($"Retrieved value: " + Convert.ToString(value));
+                return value;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
                 isAuthorized = false;
                 return null;
             }
