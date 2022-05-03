@@ -115,7 +115,7 @@ namespace CooperateMVC.Logic
                 };
                 var claims = new Dictionary<string, object> {{"role", "lawyer"}};
                 UserRecord userRecord = FirebaseAuth.DefaultInstance.CreateUserAsync(userRecords).Result;
-                user.Id = userRecord.Uid;
+                user.Uid = userRecord.Uid;
                 FirebaseAuth.DefaultInstance.SetCustomUserClaimsAsync(userRecord.Uid, claims);
                 var result = _dekoSharp.CreateLawyerTable(user, out _);
                 DekoUtility.LogInfo(result);
@@ -208,7 +208,6 @@ namespace CooperateMVC.Logic
                 var customClaims = verifiedToken.Claims;
                 var result = customClaims.Aggregate("",
                     (current, claim) => current + $" Key: {claim.Key}, Value: {claim.Value}");
-                Console.WriteLine($"Claims result: {result}");
                 isAuthorized = true;
                 return customClaims.Values;
             }
@@ -232,7 +231,7 @@ namespace CooperateMVC.Logic
                 var customClaims = verifiedToken.Claims;
                 var result = customClaims.Aggregate("",
                     (current, claim) => current + $" Key: {claim.Key}, Value: {claim.Value}");
-                Console.WriteLine($"Claims result: {result}");
+                //Console.WriteLine($"Claims result: {result}");
                 var value = customClaims?[key];
                 isAuthorized = true;
                 Console.WriteLine($"Retrieved value: " + Convert.ToString(value));

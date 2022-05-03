@@ -34,7 +34,10 @@ namespace CooperateMVC.Controllers
                     Role = "lawyer",
                     FullAddress = model.FullAddress,
                     City = model.City,
-                    State = model.State
+                    State = model.State,
+                    CompletedStatusCount = 0,
+                    PendingStatusCount = 0,
+                    ProcessingStatusCount = 0
                 };
 
                 var responseString = _dekobase.CreateLawyer(lawyerBiodata);

@@ -40,7 +40,7 @@ namespace CooperateMVC.Logic
             return new HttpResponseMessage();
         }
 
-        public static string ReplaceSpace(string message) => (string.IsNullOrEmpty(message)) ? message : message.Replace(' ', '_');
+        public static string ReplaceSpace(string message) => (string.IsNullOrEmpty(message)) ? message : message.Trim().Replace(' ', '_');
 
         public static void LogInfo(string message)
         {
@@ -58,6 +58,7 @@ namespace CooperateMVC.Logic
             {
                 NullValueHandling = NullValueHandling.Ignore
             });
+            Console.WriteLine("Removed null string: " + objectString);
             var noNullObject = JsonConvert.DeserializeObject<Dictionary<string, object>>(objectString);
             return noNullObject;
 		}

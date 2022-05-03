@@ -28,8 +28,19 @@ namespace CooperateMVC.Controllers
 		public async Task<IActionResult> Index()
 		{
 			var dekoSharp = new DekoSharp();
-			var bankList = dekoSharp.RetrieveAllKycRequest(out var statusCode);
-			return View(bankList);
+			var uid = new CookieManager().GetCookie("_firebaseUserId", HttpContext.Request);
+			Console.WriteLine($"uid: {uid}");
+			var claim = new Dekobase().isClaim("lawyer", HttpContext.Request.Cookies["_firebaseUser"]);
+			if (claim)
+			{
+				Console.WriteLine($"Claim is for lawyer");
+				var lawyerList = dekoSharp.RetrieveKycRequestByAssignedLawyerId(uid, out var statusCode2);
+				return View(lawyerList);
+			}
+			Console.WriteLine($"Claim is not for lawyer");
+			//var bankList = dekoSharp.RetrieveAllKycRequest(out var statusCode);
+			var bankKycList = dekoSharp.RetrieveKycRequestByRequesterId(uid, out var statusCode);
+			return View(bankKycList);
 		}
 
 		// GET: KycRequests/Details/5
@@ -79,17 +90,27 @@ namespace CooperateMVC.Controllers
 		[ValidateAntiForgeryToken]
 		public async Task<IActionResult> Create([Bind("Id,RequestId,RCNumber,RequesterName,AssignedLawyerId,TimeRequested,LastTimeUpdated,AdditionalInformation,Status")] KycRequest kycRequest)
 		{
-			if (ModelState.IsValid)
+			try
 			{
-				var bankUser = new DekoSharp().RetrieveBankUserWithCookie(Request);
-				if (bankUser == null)
+				if (ModelState.IsValid)
 				{
-					return NotFound();
+					var bankUser = new DekoSharp().RetrieveBankUserWithCookie(Request);
+					if (bankUser == null)
+					{
+						return NotFound();
+					}
+					var uid = new CookieManager().GetCookie("_firebaseUserId", HttpContext.Request);
+					await new DekoSharp().CreateKycRequest(bankUser.BankName, uid, kycRequest.RCNumber, kycRequest.AdditionalInformation);
+					return RedirectToAction(nameof(Index));
 				}
-				new DekoSharp().CreateKycRequest(bankUser.BankName, kycRequest.RCNumber, kycRequest.AdditionalInformation, out var statusCode);
-				return RedirectToAction(nameof(Index));
+				return View(kycRequest);
 			}
-			return View(kycRequest);
+			catch(Exception ex)
+			{
+				ExceptionHandler.HandleException(ex);
+				ModelState.AddModelError("", ex.Message);
+				return View(kycRequest);
+			}
 		}
 
 		// GET: KycRequests/Edit/5
@@ -221,7 +242,7 @@ namespace CooperateMVC.Controllers
 		// GET: KycRequests/Delete/5
 		public async Task<IActionResult> Delete(string id)
 		{
-			if (id == null)
+			if (string.IsNullOrEmpty(id))
 			{
 				return NotFound();
 			}
@@ -308,7 +329,7 @@ namespace CooperateMVC.Controllers
             CompanyName = kycRequest?.KycInfo?.CompanyName,
             CompanyObjective = kycRequest?.KycInfo?.CompanyObjective,
 			CompanyOfficersList = kycRequest?.KycInfo?.CompanyOfficersList,
-			RCNumber = kycRequest?.KycInfo?.RCNumber,
+			RCNumber = kycRequest?.RCNumber,
 			ShareHolders = kycRequest?.KycInfo?.ShareHolders,
 		};
         
@@ -333,11 +354,10 @@ namespace CooperateMVC.Controllers
 					var uploadKyc = new UploadKycRequest()
 					{
 						KycInfo = kycInfo,
-						LawyerID = "Aluko_&_Oyebode",
-						RCNumber = "1210"
+						RCNumber = kycInfo.RCNumber
 					};
 
-					var response = new DekoSharp().UploadKycInfo(uploadKyc, out var statusCode);
+					var response = new DekoSharp().UploadKycInfo(uploadKyc, Request, out var statusCode);
 					if (response.StartsWith("Exception"))
 					{
 						Console.WriteLine(response);
@@ -345,7 +365,7 @@ namespace CooperateMVC.Controllers
 						return View();
 					}
 					Console.WriteLine("About to redirect..");
-					//return RedirectToAction(nameof(Index));
+					return RedirectToAction(nameof(Index));
 				}
 				catch (Exception ex)
 				{

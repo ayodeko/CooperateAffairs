@@ -12,6 +12,7 @@ namespace CooperateMVC.Models
         [Required]
         public string RCNumber { get; set; }
         public string RequesterName { get; set; }
+        public string RequesterId { get; set; }
         public string? AssignedLawyerId { get; set; }
         public string? TimeRequested { get; set; }
         public string? LastTimeUpdated { get; set; }

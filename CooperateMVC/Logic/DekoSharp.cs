@@ -8,12 +8,14 @@ using CooperateMVC.Models;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Http;
 using System.Linq;
+using static CooperateMVC.Models.KycRequest;
+using System.Threading.Tasks;
 
-namespace CooperateMVC.Logic { 
-public interface IDekoSharp
-{
-    public string CreateKycRequest(string requester, string rcNumber, string additionalInformation, out HttpStatusCode statusCode);
-}
+namespace CooperateMVC.Logic {
+    public interface IDekoSharp
+    {
+        public Task<string> CreateKycRequest(string requester, string requesterId, string rcNumber, string addtionalInformation);
+    }
 
     public class DekoSharp : IDekoSharp
     {
@@ -196,16 +198,107 @@ public interface IDekoSharp
 
         public  string CreateLawyerTable(LawyerBioData data, out HttpStatusCode statusCode)
         {
-            var pushResponse = _client.Set($"test/lawyers/{DekoUtility.CheckNullOrEmpty(DekoUtility.ReplaceSpace(data.Id))}", DekoUtility.RemoveNulls(data));
+            var pushResponse = _client.Set($"test/lawyers/{DekoUtility.CheckNullOrEmpty(DekoUtility.ReplaceSpace(data.Uid))}", DekoUtility.RemoveNulls(data));
             statusCode = pushResponse.StatusCode;
             return pushResponse.Body;
         }
-
-        public  string RetrieveLawyerFromTable(string id, out HttpStatusCode statusCode)
+        public string UpdeateLawyerTable(LawyerBioData data, out HttpStatusCode statusCode)
         {
-            var getResponse = _client.Get($"test/lawyers/{DekoUtility.ReplaceSpace(id)}");
-            statusCode = getResponse.StatusCode;
-            return getResponse.Body;
+            var pushResponse = _client.Update($"test/lawyers/{DekoUtility.CheckNullOrEmpty(DekoUtility.ReplaceSpace(data.Uid))}", DekoUtility.RemoveNulls(data));
+            statusCode = pushResponse.StatusCode;
+            return pushResponse.Body;
+        }
+        public async Task<string> IncreaseLawyerKycStatusAsync(KycRequestStatus status, string uid)
+        {
+            Console.WriteLine("Inside IncreaseLawyerKycStatusAsync method..");
+            var statusData = await RetrieveLawyerByIdAsync(uid);
+            var dataHolder = new LawyerBioData();
+            if (statusData == null)
+			{
+                Console.WriteLine("Increase lawyer data is null");
+                //statusCode = HttpStatusCode.BadRequest;
+                return null;
+			}
+			switch (status)
+			{
+				case KycRequestStatus.Pending:
+                    dataHolder = new LawyerBioData { PendingStatusCount = (statusData.PendingStatusCount + 1) };
+                    Console.WriteLine($"Increase Pending count of {dataHolder.PendingStatusCount}");
+                    break;
+				case KycRequestStatus.Processing:
+                    dataHolder = new LawyerBioData { 
+                        PendingStatusCount = (statusData.PendingStatusCount - 1),
+                        ProcessingStatusCount = (statusData.ProcessingStatusCount + 1)
+                    };
+                    Console.WriteLine($"Decrease Pending count of {dataHolder.PendingStatusCount}");
+                    Console.WriteLine($"Increase Processing count of {dataHolder.ProcessingStatusCount}");
+                    break;
+				case KycRequestStatus.Completed:
+                    dataHolder = new LawyerBioData
+                    {
+                        ProcessingStatusCount = (statusData.ProcessingStatusCount - 1),
+                        CompletedStatusCount = (statusData.CompletedStatusCount + 1)
+                    };
+                    Console.WriteLine($"Decrease Processing count of {dataHolder.PendingStatusCount}");
+                    Console.WriteLine($"Increase Completed count of {dataHolder.CompletedStatusCount}");
+                    break;
+				case KycRequestStatus.Exception:
+					break;
+				default:
+                    Console.WriteLine("Inside default switch");
+					break;
+			}
+            Console.WriteLine("Increase Status Data:  " + JsonConvert.SerializeObject(DekoUtility.RemoveNulls(dataHolder)));
+            var pushResponse = await _client.UpdateAsync($"test/lawyers/{DekoUtility.CheckNullOrEmpty(DekoUtility.ReplaceSpace(statusData.Uid))}", DekoUtility.RemoveNulls(dataHolder));
+            //statusCode = pushResponse.StatusCode;
+            return pushResponse.Body;
+        }
+
+        public async Task<LawyerBioData> RetrieveLawyerByIdAsync(string id)
+        {
+            try
+            {
+                var getResponse = await _client.GetAsync($"test/lawyers/{DekoUtility.ReplaceSpace(id)}");
+                //statusCode = getResponse.StatusCode;
+                var lawyerString = getResponse.Body;
+                if (string.IsNullOrEmpty(lawyerString))
+                {
+                    //statusCode = HttpStatusCode.BadRequest;
+                    return null;
+                }
+                var lawyerRequest = JsonConvert.DeserializeObject<LawyerBioData>(lawyerString);
+                //statusCode = HttpStatusCode.OK;
+                return lawyerRequest;
+            }
+			catch
+			{
+                //statusCode = HttpStatusCode.BadRequest;
+                throw;
+            }
+        }
+
+        public async Task<List<LawyerBioData>> RetrieveAllLawyerAsync()
+        {
+            try
+            {
+                var getResponse = await _client.GetAsync($"test/lawyers");
+                //statusCode = getResponse.StatusCode;
+                var lawyerString = getResponse.Body;
+                if (string.IsNullOrEmpty(lawyerString))
+                {
+                    //statusCode = HttpStatusCode.BadRequest;
+                    return null;
+                }
+                var lawyerRequestHolder = JsonConvert.DeserializeObject<Dictionary<string, LawyerBioData>>(lawyerString);
+                var lawyerRequest = new List<LawyerBioData>(lawyerRequestHolder.Values);
+                //statusCode = HttpStatusCode.OK;
+                return lawyerRequest;
+            }
+            catch
+            {
+                //statusCode = HttpStatusCode.BadRequest;
+                throw;
+            }
         }
 
         public LawyerBioData RetrieveLawyerFromTableByName(string name, out HttpStatusCode statusCode)
@@ -287,26 +380,30 @@ public interface IDekoSharp
 
         }
 
-        public string CreateKycRequest(string requester, string rcNumber, string addtionalInformation, out HttpStatusCode statusCode)
+        public async Task<string> CreateKycRequest(string requester, string requesterId, string rcNumber, string addtionalInformation)
         {
             var guid = Guid.NewGuid().ToString();
+            string lawyerId = await GenerateLawyerAssginment();
+            Console.WriteLine($"Generated Assigned Lawyer UID: {lawyerId}");
             var existingData = RetrieveDataFromPath($"request/{DekoUtility.CheckNullOrEmpty(DekoUtility.ReplaceSpace(rcNumber))}",
-                out statusCode);
+                out var statusCode);
             if (!string.IsNullOrEmpty(existingData))
             {
-                return $"Request with RCNumber {DekoUtility.ReplaceSpace(rcNumber)} already exists: {existingData}";
+                throw new InvalidOperationException( $"Request with RCNumber {DekoUtility.ReplaceSpace(rcNumber)} already exists");
             }
             var kycRequest = new KycRequest
             {
                 Status = KycRequest.KycRequestStatus.Pending,
                 RequesterName = requester,
+                RequesterId = requesterId,
                 RCNumber = rcNumber,
                 TimeRequested = DateTime.Now.ToString(),
-                AdditionalInformation = addtionalInformation
+                AdditionalInformation = addtionalInformation,
+                AssignedLawyerId = lawyerId
             };
             var result = SaveDataToPath($"request/{DekoUtility.CheckNullOrEmpty(DekoUtility.ReplaceSpace(kycRequest.RCNumber))}", DekoUtility.RemoveNulls(kycRequest), out var saveDataStatusCode);
             statusCode = saveDataStatusCode;
-            string lawyerId = GenerateLawyerAssginment();
+            await IncreaseLawyerKycStatusAsync(KycRequestStatus.Pending, lawyerId);
             SendMail(lawyerId);
             return result;
         }
@@ -335,24 +432,45 @@ public interface IDekoSharp
 			} 
         }
 
-		private string GenerateLawyerAssginment()
+		private async Task<string> GenerateLawyerAssginment()
 		{
-            return "";
+            var lawyerList = await RetrieveAllLawyerAsync();
+            Console.WriteLine("LawyerList Count: " + lawyerList.Count);
+            var pendingLawyer = lawyerList.Where(y => y.PendingStatusCount == 0).FirstOrDefault();
+            if (pendingLawyer != null) return pendingLawyer.Uid;
+            var pendingCountLawyer = lawyerList.OrderBy(x => x.PendingStatusCount).FirstOrDefault();
+            if (pendingCountLawyer != null) return pendingCountLawyer.Uid;
+            var processingLawyer = lawyerList.Where(y => y.ProcessingStatusCount == 0).FirstOrDefault();
+            if (processingLawyer != null) return processingLawyer.Uid;
+            var processingCountLawyer = lawyerList.OrderBy(x => x.ProcessingStatusCount).FirstOrDefault();
+            if (processingCountLawyer != null) return processingCountLawyer.Uid;
+            var completedLawyer = lawyerList.OrderBy(x => x.CompletedStatusCount).FirstOrDefault();
+            if (completedLawyer != null) return completedLawyer.Uid;
+            var defaultLawyer = lawyerList.FirstOrDefault();
+            if (defaultLawyer != null) return defaultLawyer.Uid;
+            throw new Exception("GenerateLawyerAssignment Exception, No Assignable lawyer for the request");
 		}
 
-		public  string UploadKycInfo(UploadKycRequest inputRequest, out HttpStatusCode statusCode)
+		public  string UploadKycInfo(UploadKycRequest inputRequest, HttpRequest request, out HttpStatusCode statusCode)
         {
             var kycData = RetrieveKycRequestByRcNumber(inputRequest.RCNumber, out var statusCode2);
             if (kycData == null || kycData.ToString().Equals("null"))
             {
                 statusCode = statusCode2;
                 return $"Exception: Request with RCNumber {DekoUtility.ReplaceSpace(inputRequest.RCNumber)} does not exist";
-            }
+            }   
             kycData.KycInfo = inputRequest.KycInfo;
             if(kycData.KycInfo != null) { kycData.KycInfo.RCNumber = inputRequest.RCNumber; }
-            kycData.Status = KycRequest.KycRequestStatus.Processing;
             kycData.LastTimeUpdated = DateTime.Now.ToString();
             //var pushResponse = _client.Update($"request/{DekoUtility.ReplaceSpace(inputRequest.RCNumber)}", kycRequest);
+            if (kycData.Status == KycRequestStatus.Pending)
+            {
+                Console.WriteLine("Change Pending to processing");
+                kycData.Status = KycRequest.KycRequestStatus.Processing;
+
+                var uid = new CookieManager().GetCookie("_firebaseUserId", request);
+                IncreaseLawyerKycStatusAsync(KycRequest.KycRequestStatus.Processing, uid);
+            }
             var pushResponse = DekoHttp.FirebaseHttpPatch($"request/{DekoUtility.CheckNullOrEmpty(DekoUtility.ReplaceSpace(inputRequest.RCNumber))}", DekoUtility.RemoveNulls(kycData));
             statusCode = HttpStatusCode.OK;
             return pushResponse;
@@ -381,6 +499,38 @@ public interface IDekoSharp
             }
             var responseDictionary = JsonConvert.DeserializeObject<Dictionary<string, KycRequest>>(responseBody);
             List<KycRequest> kycRequests = new List<KycRequest>(responseDictionary.Values);
+            return kycRequests;
+        }
+
+        public List<KycRequest> RetrieveKycRequestByRequesterId(string requesterId, out HttpStatusCode statusCode)
+        {
+            //var getResponse = _client.Get($"request");
+            var kycListString = DekoHttp.FirebaseOrderByEqualToString($"request", "RequesterId", requesterId);
+			if (kycListString.StartsWith("Error") || string.IsNullOrEmpty(kycListString))
+			{
+                statusCode = HttpStatusCode.BadRequest;
+                return null;
+			}
+
+            var responseDictionary = JsonConvert.DeserializeObject<Dictionary<string, KycRequest>>(kycListString);
+            List<KycRequest> kycRequests = new List<KycRequest>(responseDictionary.Values);
+            statusCode = HttpStatusCode.OK;
+            return kycRequests;
+        }
+
+        public List<KycRequest> RetrieveKycRequestByAssignedLawyerId(string assignedLawyerId, out HttpStatusCode statusCode)
+        {
+            //var getResponse = _client.Get($"request");
+            var kycListString = DekoHttp.FirebaseOrderByEqualToString($"request", "AssignedLawyerId", assignedLawyerId);
+            if (kycListString.StartsWith("Error") || string.IsNullOrEmpty(kycListString))
+            {
+                statusCode = HttpStatusCode.BadRequest;
+                return null;
+            }
+
+            var responseDictionary = JsonConvert.DeserializeObject<Dictionary<string, KycRequest>>(kycListString);
+            List<KycRequest> kycRequests = new List<KycRequest>(responseDictionary.Values);
+            statusCode = HttpStatusCode.OK;
             return kycRequests;
         }
         public  string RetrievePendingKycRequests(out HttpStatusCode statusCode)

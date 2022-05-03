@@ -6,7 +6,7 @@ namespace CooperateMVC.Logic
 	{
 		public static void HandleException(Exception ex)
 		{
-			throw ex;
+			Console.WriteLine(ex);
 		}
 	}
 }
